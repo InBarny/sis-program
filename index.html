@@ -212,6 +212,11 @@
             flex-wrap: wrap;
         }
 
+        .action-right {
+            display: flex;
+            gap: 12px;
+        }
+
         .checkbox-label {
             display: flex;
             align-items: center;
@@ -230,27 +235,37 @@
             cursor: pointer;
         }
 
-        .next-btn {
-            background: #238636;
-            border: none;
-            color: white;
+        .nav-btn {
+            background: #21262d;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
             font-weight: bold;
             font-size: 16px;
-            padding: 10px 28px;
+            padding: 10px 24px;
             border-radius: 40px;
             cursor: pointer;
-            border: 1px solid #2ea043;
             transition: 0.2s;
             white-space: nowrap;
         }
 
-        .next-btn:hover:not(:disabled) {
-            background: #2ea043;
+        .nav-btn:hover:not(:disabled) {
+            background: #30363d;
+            border-color: #8b949e;
         }
 
-        .next-btn:disabled {
+        .nav-btn:disabled {
             opacity: 0.4;
             cursor: not-allowed;
+        }
+
+        .next-btn {
+            background: #238636;
+            border: 1px solid #2ea043;
+            color: white;
+        }
+
+        .next-btn:hover:not(:disabled) {
+            background: #2ea043;
         }
 
         .hint {
@@ -270,7 +285,6 @@
             display: none !important;
         }
 
-        /* Адаптивность для мобильных */
         @media (max-width: 600px) {
             body {
                 padding: 8px;
@@ -350,10 +364,14 @@
                 justify-content: center;
             }
 
-            .next-btn {
-                width: 100%;
+            .action-right {
+                justify-content: center;
+            }
+
+            .nav-btn {
+                flex: 1;
                 text-align: center;
-                padding: 12px 20px;
+                padding: 12px 16px;
             }
 
             .hint {
@@ -362,7 +380,6 @@
             }
         }
 
-        /* Для очень маленьких экранов */
         @media (max-width: 400px) {
             .progress {
                 font-size: 14px;
@@ -383,9 +400,9 @@
                 font-size: 12px;
             }
 
-            .next-btn {
-                font-size: 15px;
-                padding: 10px 16px;
+            .nav-btn {
+                font-size: 14px;
+                padding: 10px 12px;
             }
         }
     </style>
@@ -427,7 +444,7 @@
             <textarea id="codeGhostInput" class="ghost-input" spellcheck="false" autofocus></textarea>
         </div>
 
-        <!-- Этап: Объяснение (только для заданий, изначально скрыт) -->
+        <!-- Этап: Объяснение -->
         <div class="stage-header hidden" id="explainHeader">
             <span class="stage-badge" id="explainStageLabel">📝 ОБЪЯСНЕНИЕ</span>
         </div>
@@ -440,10 +457,13 @@
             <div class="action-left">
                 <div class="hint">← Backspace · Tab → 4 пробела</div>
             </div>
-            <button class="next-btn" id="nextTaskBtn" disabled>Следующее задание →</button>
+            <div class="action-right">
+                <button class="nav-btn" id="prevBtn" disabled>← Предыдущее</button>
+                <button class="nav-btn next-btn" id="nextBtn">Следующее →</button>
+            </div>
         </div>
         <div class="note">
-            ⚡ Переключайтесь между заданиями и вопросами. Для вопросов доступны полные и краткие ответы.
+            ⚡ Можно переключаться между заданиями и вопросами. Для вопросов доступны полные и краткие ответы.
         </div>
     </div>
 
@@ -452,7 +472,6 @@
             "use strict";
 
             // ---------- МАССИВЫ ЗАДАНИЙ И ВОПРОСОВ ----------
-            // ВСТАВЬТЕ СЮДА СВОЙ МАССИВ tasks (25 практических заданий)
             const tasks = [
                 {
                     question: "1. Динамический массив с ручным управлением памятью",
@@ -503,7 +522,7 @@ int main() {
     dynarray_free(&arr);
     return 0;
 }`,
-                    explanation: "Структура DynArray: указатель data, длина len, ёмкость cap. Создание выделяет память через malloc."
+                    explanation: "Структура DynArray хранит указатель на данные (data), текущее количество элементов (len) и выделенную ёмкость (cap). Функция dynarray_create выделяет начальную память через malloc. dynarray_push добавляет элемент: если массив заполнен, удваивает ёмкость с помощью realloc и копирует данные. Доступ к элементам — только через арифметику указателей *(arr.data + i). dynarray_free освобождает память и обнуляет поля структуры."
                 },
                 {
                     question: "2. Обратный порядок вывода через указатели",
@@ -521,7 +540,7 @@ int main() {
     print_reverse(arr, 5);
     return 0;
 }`,
-                    explanation: "Указатель p идёт с конца массива к началу, выводя элементы в обратном порядке без индексов."
+                    explanation: "Указатель p устанавливается на последний элемент массива (a + n - 1). В цикле он движется назад к началу, разыменовываясь для вывода значения. Индексы [] не используются, только арифметика указателей."
                 },
                 {
                     question: "3. Копирование массива через указатели",
@@ -540,7 +559,7 @@ int main() {
     printf("\\n");
     return 0;
 }`,
-                    explanation: "Копирование с постинкрементом указателей, запрещены индексы и memcpy."
+                    explanation: "Копирование выполняется в цикле while (n--). На каждой итерации значение из src копируется в dest, после чего оба указателя инкрементируются (постфиксный ++). Это перемещает указатели к следующим элементам. Запрещены индексы и стандартные функции типа memcpy."
                 },
                 {
                     question: "4. Слияние двух отсортированных массивов",
@@ -571,7 +590,7 @@ int main() {
     }
     return 0;
 }`,
-                    explanation: "Слияние двух отсортированных массивов с тремя указателями. Память выделяется динамически."
+                    explanation: "Выделяется память под результирующий массив C размером m+n. Используются три указателя: pa на A, pb на B, pc на C. Пока оба массива не исчерпаны, сравниваются элементы и в C записывается меньший. После исчерпания одного из массивов оставшиеся элементы другого копируются напрямую. В main память освобождается."
                 },
                 {
                     question: "5. Проверка палиндрома через два указателя",
@@ -591,7 +610,7 @@ int main() {
     printf("%d\\n", is_palindrome(arr2, 5));
     return 0;
 }`,
-                    explanation: "Два указателя движутся навстречу, сравнивая элементы. Палиндром — все пары совпадают."
+                    explanation: "Два указателя: l (левый) указывает на начало, r (правый) на конец. Они движутся навстречу, сравнивая значения. Если хотя бы одна пара не совпадает, возвращается 0. Если цикл завершился без несовпадений, массив — палиндром."
                 },
                 {
                     question: "6. Матрица через единый блок памяти",
@@ -619,7 +638,7 @@ int main() {
     free(mat);
     return 0;
 }`,
-                    explanation: "Матрица в одномерном блоке. Доступ через арифметику указателей: смещение = i*cols + j."
+                    explanation: "Матрица хранится в одномерном массиве размером rows * cols. Доступ к элементу (i, j) осуществляется по формуле i * cols + j через арифметику указателей *(m + смещение). Функции get и set инкапсулируют это вычисление. В main матрица заполняется значениями i*cols+j и выводится на экран."
                 },
                 {
                     question: "7. Сортировка пузырьком",
@@ -643,7 +662,7 @@ int main() {
     printf("\\n");
     return 0;
 }`,
-                    explanation: "Пузырьковая сортировка с доступом через указатели. Сравнение и обмен соседних элементов."
+                    explanation: "Алгоритм пузырьковой сортировки: попарное сравнение соседних элементов и их обмен, если они не в порядке. Внешний цикл уменьшает границу прохода, внутренний проходит по неотсортированной части. Доступ к элементам через *(a + j)."
                 },
                 {
                     question: "8. Факториал числа",
@@ -659,7 +678,7 @@ int main() {
     printf("%llu\\n", factorial(5));
     return 0;
 }`,
-                    explanation: "Итеративное вычисление факториала. 0! = 1. Для n<0 возвращает 0."
+                    explanation: "Итеративное вычисление факториала: результат r инициализируется 1, затем умножается на все числа от 2 до n. 0! = 1 по условию. Для отрицательных n возвращается 0 как признак ошибки."
                 },
                 {
                     question: "9. Числа Фибоначчи",
@@ -676,7 +695,7 @@ int main() {
     printf("%llu\\n", fib(10));
     return 0;
 }`,
-                    explanation: "Итеративный расчёт чисел Фибоначчи. a и b сдвигаются, n-е число — a."
+                    explanation: "Итеративное вычисление n-го числа Фибоначчи. Переменные a и b хранят два последовательных числа (начально 0 и 1). На каждом шаге вычисляется следующее число t = a + b, затем a сдвигается на b, b на t. После n итераций a содержит F(n)."
                 },
                 {
                     question: "10. Наибольший общий делитель (НОД)",
@@ -691,7 +710,7 @@ int main() {
     printf("%d\\n", gcd(48, 18));
     return 0;
 }`,
-                    explanation: "Алгоритм Евклида для НОД. Замена (a,b) на (b, a%b) пока b != 0."
+                    explanation: "Алгоритм Евклида: пока b не равно 0, заменяем пару (a, b) на (b, a % b). Последнее ненулевое значение a является НОД. Временная переменная t сохраняет b перед вычислением остатка."
                 },
                 {
                     question: "11. Наименьшее общее кратное (НОК)",
@@ -710,7 +729,7 @@ int main() {
     printf("%d\\n", lcm(12, 18));
     return 0;
 }`,
-                    explanation: "НОК через НОД: a/gcd(a,b)*b. Предотвращает переполнение."
+                    explanation: "НОК вычисляется по формуле (a * b) / НОД(a, b). Чтобы избежать переполнения, сначала выполняется деление a на НОД, затем умножение на b. Если одно из чисел 0, НОК равен 0."
                 },
                 {
                     question: "12. Проверка числа на простоту",
@@ -731,7 +750,7 @@ int main() {
     printf("%d\\n", is_prime(18));
     return 0;
 }`,
-                    explanation: "Проверка простоты: перебор нечётных делителей до sqrt(n)."
+                    explanation: "Простые числа больше 1. Отдельно проверяется 2, затем отсеиваются чётные. Далее перебираются нечётные делители от 3 до корня из n. Если делитель найден, число составное, иначе — простое."
                 },
                 {
                     question: "13. Разложение числа на простые множители",
@@ -762,7 +781,7 @@ int main() {
     print_prime_factors(60);
     return 0;
 }`,
-                    explanation: "Разложение на простые множители с выводом в формате p1^k1 * p2^k2 ..."
+                    explanation: "Перебираются потенциальные простые делители p от 2 до корня из m. Для каждого считается кратность cnt. Если p делит m, он выводится в формате p^k. Оставшееся m > 1 само является простым и выводится последним множителем. Флаг first управляет выводом разделителя ' * '."
                 },
                 {
                     question: "14. Возведение в степень (быстрый алгоритм)",
@@ -782,7 +801,7 @@ int main() {
     printf("%lld\\n", power(2, 10));
     return 0;
 }`,
-                    explanation: "Бинарное возведение в степень. Умножение при установленном бите экспоненты."
+                    explanation: "Бинарное возведение в степень: пока экспонента e > 0, если младший бит e равен 1, результат умножается на текущее основание b. Затем b возводится в квадрат, e сдвигается вправо. Сложность O(log e)."
                 },
                 {
                     question: "15. Сумма цифр числа",
@@ -800,7 +819,7 @@ int main() {
     printf("%d\\n", digit_sum(12345));
     return 0;
 }`,
-                    explanation: "Сумма цифр числа: извлекаем последнюю цифру и прибавляем к сумме."
+                    explanation: "Берётся модуль числа. В цикле пока n != 0, последняя цифра (n % 10) прибавляется к сумме s, затем n делится на 10, отбрасывая последнюю цифру."
                 },
                 {
                     question: "16. Перевод числа из десятичной системы в двоичную",
@@ -819,7 +838,7 @@ int main() {
     printf("\\n");
     return 0;
 }`,
-                    explanation: "Перевод в двоичную систему: биты записываются в буфер с конца."
+                    explanation: "Биты числа извлекаются с младшего с помощью (n & 1) и записываются в символьный массив b с конца. После цикла строка выводится, начиная с первого записанного символа (b + i + 1)."
                 },
                 {
                     question: "17. Поиск первого элемента, удовлетворяющего предикату",
@@ -841,7 +860,7 @@ int main() {
     else printf("Not found\\n");
     return 0;
 }`,
-                    explanation: "Поиск первого элемента, удовлетворяющего предикату. Возвращает указатель или NULL."
+                    explanation: "Функция принимает указатель на массив, размер и указатель на функцию-предикат. В цикле для каждого элемента вызывается предикат. При первом успехе возвращается указатель на элемент, иначе NULL."
                 },
                 {
                     question: "18. Фильтрация массива по предикату",
@@ -865,7 +884,7 @@ int main() {
     printf("\\n");
     return 0;
 }`,
-                    explanation: "Фильтрация массива: копирование в out элементов, для которых предикат истинен."
+                    explanation: "Проходим по исходному массиву a. Если предикат p возвращает истину для элемента, копируем его в выходной массив out и увеличиваем счётчик cnt. Возвращаем количество скопированных элементов."
                 },
                 {
                     question: "19. Разделение массива на две части по предикату (partition)",
@@ -894,7 +913,7 @@ int main() {
     printf("\\n");
     return 0;
 }`,
-                    explanation: "Разделение массива: элементы с истинным предикатом в начало. Возвращает границу."
+                    explanation: "Алгоритм разделения (partition): два указателя l и r движутся навстречу. Левый ищет элемент, не удовлетворяющий предикату, правый — удовлетворяющий. Найденные элементы меняются местами. В результате все элементы с истинным предикатом оказываются в начале. Возвращается указатель на первый элемент, не удовлетворяющий предикату."
                 },
                 {
                     question: "20. Подсчёт гласных и согласных в строке",
@@ -921,7 +940,7 @@ int main() {
     printf("Vowels: %d, Consonants: %d\\n", vowels, consonants);
     return 0;
 }`,
-                    explanation: "Подсчёт гласных и согласных букв в строке. Регистр не учитывается."
+                    explanation: "Функция обходит строку по указателю. Каждый символ приводится к нижнему регистру. Если это буква, проверяется вхождение в строку гласных 'aeiou'. В зависимости от результата увеличивается соответствующий счётчик. Небуквенные символы игнорируются."
                 },
                 {
                     question: "21. Переворот числа",
@@ -939,7 +958,7 @@ int main() {
     printf("%d\\n", reverse_number(-567));
     return 0;
 }`,
-                    explanation: "Переворот числа с сохранением знака. Извлекаем цифры и строим обратное число."
+                    explanation: "Сохраняется знак числа в переменной s. С модулем числа x в цикле извлекается последняя цифра (x % 10) и добавляется к результату r, умноженному на 10 (сдвиг разряда). Затем x делится на 10. Возвращается s * r."
                 },
                 {
                     question: "22. Проверка скобочной последовательности",
@@ -969,7 +988,7 @@ int main() {
     printf("%d\\n", is_balanced("([)]"));
     return 0;
 }`,
-                    explanation: "Проверка сбалансированности скобок с использованием стека."
+                    explanation: "Используется стек (массив st) для хранения открывающих скобок. При встрече открывающей она помещается в стек. При встрече закрывающей проверяется, соответствует ли она верхней скобке стека. Если стек пуст или скобки не совпадают — ошибка. В конце стек должен быть пуст."
                 },
                 {
                     question: "23. Замена символов в строке",
@@ -986,7 +1005,7 @@ int main() {
     printf("%s\\n", str);
     return 0;
 }`,
-                    explanation: "Замена символов в строке на месте. Проход указателем."
+                    explanation: "Функция проходит по строке с помощью указателя. Если текущий символ равен old, он заменяется на new. Изменения происходят на месте, без создания новой строки."
                 },
                 {
                     question: "24. Бинарный поиск в отсортированном массиве",
@@ -1011,7 +1030,7 @@ int main() {
     printf("Index of 7: %d\\n", idx);
     return 0;
 }`,
-                    explanation: "Бинарный поиск в отсортированном массиве. Итеративная реализация."
+                    explanation: "Итеративный бинарный поиск. На каждом шаге вычисляется средний индекс m = l + (r - l) / 2 (без переполнения). Значение по этому индексу сравнивается с искомым t. В зависимости от результата границы l или r сужаются. Если элемент найден, возвращается его индекс, иначе -1."
                 },
                 {
                     question: "25. Преобразование инфиксной записи в постфиксную (ОПЗ)",
@@ -1053,11 +1072,9 @@ int main() {
     printf("Postfix: %s\\n", post);
     return 0;
 }`,
-                    explanation: "Алгоритм сортировочной станции. Операнды сразу в выход, операторы в стек с приоритетом."
+                    explanation: "Алгоритм сортировочной станции. Операнды (буквы/цифры) сразу попадают в выходную строку. Операторы помещаются в стек с учётом приоритета: перед добавлением нового оператора из стека выталкиваются все операторы с большим или равным приоритетом (кроме '('). Открывающая скобка просто кладётся в стек, закрывающая вызывает выталкивание до ближайшей '('. В конце оставшиеся операторы выталкиваются."
                 }
             ];
-
-            // ВСТАВЬТЕ СЮДА СВОЙ МАССИВ questions (30 теоретических вопросов)
             const questions = [
                 {
                     question: "1. Архитектура фон Неймана и её основные компоненты",
@@ -1211,7 +1228,7 @@ int main() {
                 }
             ];
 
-            // Если tasks пуст, заполним заглушками, чтобы не сломать логику
+            // Если tasks пуст, заполним заглушками
             if (tasks.length === 0) {
                 for (let i = 1; i <= 25; i++) {
                     tasks.push({
@@ -1235,7 +1252,8 @@ int main() {
             const taskCounter = document.getElementById('taskCounter');
             const correctSpan = document.getElementById('correctCount');
             const errorSpan = document.getElementById('errorCount');
-            const nextBtn = document.getElementById('nextTaskBtn');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
             const codeStageLabel = document.getElementById('codeStageLabel');
             const explainStageLabel = document.getElementById('explainStageLabel');
             const explainCheckbox = document.getElementById('explainCheckbox');
@@ -1244,9 +1262,9 @@ int main() {
             const modeBtns = document.querySelectorAll('.mode-btn');
 
             // Состояние
-            let currentMode = 'tasks';        // 'tasks' или 'questions'
+            let currentMode = 'tasks';
             let currentIndex = 0;
-            let stage = 'code';              // 'code' или 'explain' (только для tasks)
+            let stage = 'code';
             let currentText = '';
             let userText = '';
             let correctChars = 0;
@@ -1258,7 +1276,6 @@ int main() {
             let activeOverlay = codeOverlay;
             let activeContainer = codeTypingContainer;
 
-            // Получение текущего элемента (задание или вопрос)
             function getCurrentItem() {
                 return currentMode === 'tasks' ? tasks[currentIndex] : questions[currentIndex];
             }
@@ -1267,18 +1284,15 @@ int main() {
                 return currentMode === 'tasks' ? tasks.length : questions.length;
             }
 
-            // Получение текста для набора в зависимости от режима и галочек
             function getCurrentTypingText() {
                 const item = getCurrentItem();
                 if (currentMode === 'tasks') {
                     return stage === 'code' ? item.code : item.explanation;
                 } else {
-                    // Режим вопросов
                     return shortAnswerCheckbox.checked ? item.shortAnswer : item.fullAnswer;
                 }
             }
 
-            // Рендеринг текста с подсветкой
             function renderOverlay(text, user, overlayEl) {
                 const showText = showTextCheckbox.checked;
                 let html = '';
@@ -1369,7 +1383,6 @@ int main() {
                 isTaskCompleted = true;
                 isStageCompleted = true;
                 activeGhost.disabled = true;
-                nextBtn.disabled = false;
                 if (currentMode === 'tasks') {
                     if (stage === 'code') {
                         codeStageLabel.textContent = '✅ КОД ЗАВЕРШЁН';
@@ -1419,15 +1432,14 @@ int main() {
                 const item = getCurrentItem();
                 questionDisplay.textContent = item.question;
 
-                // Сброс этапа
                 stage = 'code';
                 currentText = getCurrentTypingText();
                 userText = '';
                 isStageCompleted = false;
                 isTaskCompleted = false;
-                nextBtn.disabled = true;
+                prevBtn.disabled = (currentIndex === 0);
+                nextBtn.disabled = false;
 
-                // Для вопросов скрываем этап объяснения и чекбокс "Добавить объяснение"
                 if (currentMode === 'questions') {
                     explainCheckbox.disabled = true;
                     explainCheckbox.checked = false;
@@ -1479,11 +1491,18 @@ int main() {
                     codeHeader.classList.add('hidden');
                     explainHeader.classList.add('hidden');
                     taskCounter.textContent = `Завершено ${total} / ${total}`;
+                    prevBtn.disabled = true;
                     nextBtn.disabled = true;
                 }
             }
 
-            // Переключение режима
+            function goToPrevItem() {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    loadItem(currentIndex);
+                }
+            }
+
             function setMode(mode) {
                 currentMode = mode;
                 modeBtns.forEach(btn => {
@@ -1499,6 +1518,7 @@ int main() {
             codeGhostInput.addEventListener('keydown', handleKeyDown);
             explainGhostInput.addEventListener('keydown', handleKeyDown);
 
+            prevBtn.addEventListener('click', goToPrevItem);
             nextBtn.addEventListener('click', goToNextItem);
 
             showTextCheckbox.addEventListener('change', () => {
